@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  ExportToJsonFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main.handler
+      Runtime: python3.8
+      CodeUri: ./export_to_json
+      Policies:
+        - S3WritePolicy:
+            BucketName: earthquaker-bucket

@@ -1,0 +1,106 @@
+# This is a sample workflow to test or replace with your source code.
+#
+# This workflow passes the region where the workflow is deployed
+# to the Wikipedia API and returns a list of related Wikipedia articles.
+# A region is retrieved from the GOOGLE_CLOUD_LOCATION system variable
+# unless you input your own search term; for example, {"searchTerm": "asia"}.
+main:
+    steps:
+        - first_step:
+            call: http.get
+            args:
+                url: https://us-east1-earthquakers.cloudfunctions.net/invoke_trigger
+                auth:
+                    type: OIDC
+            result: trigger_event
+        - where_to_jump:
+            switch:
+                - condition: ${trigger_event.body == "0"}
+                  next: end
+                - condition: ${trigger_event.body == "1"}
+                  next: parallelStep
+        - parallelStep:
+            parallel:
+                branches:
+                    - getEQ:
+                        steps:
+                            - extractEarthquakeData:
+                                call: http.post
+                                args:
+                                    url: 'https://us-east1-earthquakers.cloudfunctions.net/extract_earthquake_data'
+                                    auth:
+                                        type: OIDC
+                            - manipulateEarthquakeData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/manipulate_properties
+                                    auth:
+                                        type: OIDC
+                            - prepareEarthquakeData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/prepare_earthquake_data
+                                    auth:
+                                        type: OIDC
+                            - loadEarthquakeData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/load_earthquake_data
+                                    auth:
+                                        type: OIDC
+                    - getCT:
+                        steps:
+                            - extractContinentData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/extract_continent_data
+                                    auth:
+                                        type: OIDC
+                            - prepareContinentData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/prepare_continent_data
+                                    auth:
+                                        type: OIDC
+                            - loadContinentData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/load_continent_data
+                                    auth:
+                                        type: OIDC
+        - JoinData:
+            call: http.post
+            args:
+                url: https://us-east1-earthquakers.cloudfunctions.net/join_earthquake_continent
+                auth:
+                    type: OIDC
+        - Top50:
+            call: http.post
+            args:
+                url: https://us-east1-earthquakers.cloudfunctions.net/load_top_earthquakes
+                auth:
+                    type: OIDC
+         - parallelStep2:
+            parallel:
+                branches:
+                    - export1:
+                        steps:
+                            - ExportJoinedData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/export_all_earthquake_data
+                                    auth:
+                                        type: OIDC
+                    - export2:
+                        steps:
+                            - ExportTopData:
+                                call: http.post
+                                args:
+                                    url: https://us-east1-earthquakers.cloudfunctions.net/export_200_earthquake_data
+                                    auth:
+                                        type: OIDC       
+                 
+
+                    
+
+
