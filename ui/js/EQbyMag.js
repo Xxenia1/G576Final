@@ -83,7 +83,7 @@ function magnitude_donut(mag_array_fil, palette){
     .style("font", "14px sans-serif")
     .attr("class", "title")
     .attr("transform", "translate(-50, 55)")
-    .text("Since Apr 2024")
+    .text("Since Nov 2024")
 
     const tip = svg.append("g")
     .style("visibility", "hidden");
